@@ -5,9 +5,10 @@ import smtplib
 from email.message import EmailMessage
 
 # GitHub configuration
-github_token = os.environ['GITHUB_TOKEN']
-target_repo = "owner/repo-name"
-pattern = r'your-pattern-here'  # e.g. r'\.php$' for PHP files
+github_token = os.environ['MONITOR_TOKEN']
+target_repo = "WordPress/gutenberg"
+pattern = r'packages/block-library/src/.*\.scss$'  # Matches SCSS files in any subfolder under src/
+
 
 # Email configuration
 smtp_server = os.environ['SMTP_SERVER']
