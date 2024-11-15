@@ -15,7 +15,7 @@ jobs:
 
       - name: Fetch latest changes from target repository
         run: |
-          git remote add target https://github.com/owner/target-repo.git
+          git remote add target https://github.com/WordPress/gutenberg.git
           git fetch target
 
       - name: Set up Python
