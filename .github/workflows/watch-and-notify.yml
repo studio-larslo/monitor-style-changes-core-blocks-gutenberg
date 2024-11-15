@@ -1,0 +1,26 @@
+name: Watch External Repo Changes
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
+  workflow_dispatch:  # Manual trigger option
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out monitoring repository
+        uses: actions/checkout@v3
+
+      - name: Fetch latest changes from target repository
+        run: |
+          git remote add target https://github.com/owner/target-repo.git
+          git fetch target
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install PyGithub
