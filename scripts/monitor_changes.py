@@ -55,6 +55,17 @@ def check_changes():
         send_notification(matching_files, latest_commit)
     else:
         logger.info("No matching files found")
+def test_monitoring():
+    logger.info("Starting test run...")
+    g = Github(github_token)
+    repo = g.get_repo(target_repo)
+    commits = repo.get_commits()
+    latest_commit = commits[0]
+    
+    # Force a test notification
+    test_files = ['test/file1.scss', 'test/file2.css']
+    send_notification(test_files, latest_commit)
+    logger.info("Test completed!")
 
 def send_notification(files, commit):
     logger.info(f"Sending notification email to: {receiver_email}")
@@ -81,3 +92,8 @@ def send_notification(files, commit):
 
 if __name__ == "__main__":
     check_changes()
+    test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
+    if test_mode:
+        logger.info("Running in test mode")
+        test_monitoring()  # Use this for testing
+
