@@ -92,8 +92,8 @@ def send_notification(files, commit):
 
 if __name__ == "__main__":
     check_changes()
-    test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
-    if test_mode:
-        logger.info("Running in test mode")
-        test_monitoring()  # Use this for testing
+    # test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
+    # if test_mode:
+    #     logger.info("Running in test mode")
+    #     test_monitoring()  # Use this for testing
 
