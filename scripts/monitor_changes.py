@@ -118,12 +118,23 @@ def main():
     
     if matching_files:
         logger.info(f"Found {len(matching_files)} relevant changes")
-        content = format_changes_report(
+        report = format_changes_report(
             matching_files,
             f"https://github.com/{target_repo}/compare/{previous.tag_name}...{latest.tag_name}",
             latest
         )
-        print(content)
+        
+        # Save report to file for GitHub Actions
+        with open('changes_report.md', 'w') as f:
+            f.write(report)
+        
+        # Set environment variable for GitHub Actions
+        print("::set-env name=CHANGES_FOUND::true")
+        
+        if test_mode:
+            print("\n" + "="*80 + "\n")
+            print(report)
+            print("\n" + "="*80 + "\n")
     else:
         logger.info("No relevant changes found")
 
