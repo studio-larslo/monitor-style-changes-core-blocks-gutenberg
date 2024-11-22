@@ -1,10 +1,5 @@
 """
-Goal of this workflow is to monitor frontend changes of core gutenberg blocks
-since these might directly affect the frontend of the website 
-and therefore need to be monitored.
-lets watch the '/packages/block-editor/src' subfolders 
-here we focus on '*.(s)css' and 'view.(m)js' files
-lets do it with two patterns
+Monitor changes between releases, focusing on specific file patterns:
 1. folder: '/packages/block-editor/src'
 2. pattern: '*.(s)css' or 'view.(m)js'
 """
@@ -14,6 +9,7 @@ import re
 import smtplib
 from email.message import EmailMessage
 import logging
+from packaging import version
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -32,68 +28,114 @@ sender_email = os.environ['SENDER_EMAIL']
 receiver_email = os.environ['RECEIVER_EMAIL']
 email_password = os.environ['EMAIL_PASSWORD']
 
-def check_changes():
-    logger.info(f"Starting repository check for: {target_repo}")
-    g = Github(github_token)
-    repo = g.get_repo(target_repo)
+def get_latest_releases(repo, count=2):
+    """Get the latest releases from the repository"""
+    logger.info("Fetching latest releases...")
+    releases = repo.get_releases()
+    # Convert to list and sort by version
+    releases_list = list(releases[:count+5])  # Fetch extra to ensure we have valid releases
+    valid_releases = [r for r in releases_list if not r.prerelease]  # Filter out pre-releases
+    valid_releases.sort(key=lambda x: version.parse(x.tag_name), reverse=True)
+    return valid_releases[:count]
+
+def check_file_changes(repo, base_tag, head_tag):
+    """Compare two releases and check for relevant file changes"""
+    logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
-    logger.info("Fetching latest commits...")
-    commits = repo.get_commits()
-    latest_commit = commits[0]
-    logger.info(f"Latest commit: {latest_commit.sha}")
-    
+    comparison = repo.compare(base_tag, head_tag)
     matching_files = []
-    logger.info("Checking modified files...")
-    for file in latest_commit.files:
+    
+    for file in comparison.files:
         if re.search(pattern1, file.filename):
             if re.search(pattern2, file.filename):
                 logger.info(f"Match found: {file.filename}")
-                matching_files.append(file.filename)
+                matching_files.append({
+                    'filename': file.filename,
+                    'status': file.status,
+                    'changes': file.changes
+                })
     
-    if matching_files:
-        logger.info(f"Found {len(matching_files)} matching files")
-        send_notification(matching_files, latest_commit)
-    else:
-        logger.info("No matching files found")
-def test_monitoring():
-    logger.info("Starting test run...")
-    g = Github(github_token)
-    repo = g.get_repo(target_repo)
-    commits = repo.get_commits()
-    latest_commit = commits[0]
-    
-    # Force a test notification
-    test_files = ['test/file1.scss', 'test/file2.css']
-    send_notification(test_files, latest_commit)
-    logger.info("Test completed!")
+    return matching_files
 
-def send_notification(files, commit):
+def format_email_content(matching_files, comparison_url, latest_release):
+    """Format the email content with the changes"""
+    content = f"New Release: {latest_release.tag_name}\n"
+    content += f"Released on: {latest_release.created_at}\n\n"
+    content += "Relevant file changes:\n\n"
+    
+    # Group files by status
+    added = [f for f in matching_files if f['status'] == 'added']
+    modified = [f for f in matching_files if f['status'] == 'modified']
+    removed = [f for f in matching_files if f['status'] == 'removed']
+    
+    if added:
+        content += "Added Files:\n"
+        for file in added:
+            content += f"+ {file['filename']}\n"
+        content += "\n"
+    
+    if modified:
+        content += "Modified Files:\n"
+        for file in modified:
+            content += f"~ {file['filename']} ({file['changes']} changes)\n"
+        content += "\n"
+    
+    if removed:
+        content += "Removed Files:\n"
+        for file in removed:
+            content += f"- {file['filename']}\n"
+        content += "\n"
+    
+    content += f"\nFull comparison: {comparison_url}"
+    return content
+
+def send_notification(content):
+    """Send email notification with the changes"""
     logger.info(f"Sending notification email to: {receiver_email}")
     msg = EmailMessage()
-    msg.set_content(f"Changes detected in files:\n\n" + 
-                    "\n".join(files) + 
-                    f"\n\nCommit: {commit.html_url}")
+    msg.set_content(content)
     
-    msg['Subject'] = 'Repository Change Alert'
+    msg['Subject'] = 'Gutenberg Release Change Alert'
     msg['From'] = sender_email
     msg['To'] = receiver_email
     
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
-            logger.info("Connecting to SMTP server...")
             server.starttls()
-            logger.info("Starting TLS...")
             server.login(sender_email, email_password)
-            logger.info("Logged in successfully")
             server.send_message(msg)
             logger.info("Email sent successfully!")
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
 
+def main():
+    logger.info(f"Starting release monitoring for: {target_repo}")
+    g = Github(github_token)
+    repo = g.get_repo(target_repo)
+    
+    # Get latest releases
+    releases = get_latest_releases(repo)
+    if len(releases) < 2:
+        logger.info("Not enough releases to compare")
+        return
+    
+    latest = releases[0]
+    previous = releases[1]
+    
+    # Check for relevant changes
+    matching_files = check_file_changes(repo, previous.tag_name, latest.tag_name)
+    
+    if matching_files:
+        logger.info(f"Found {len(matching_files)} relevant changes")
+        content = format_email_content(
+            matching_files,
+            f"https://github.com/{target_repo}/compare/{previous.tag_name}...{latest.tag_name}",
+            latest
+        )
+        send_notification(content)
+    else:
+        logger.info("No relevant changes found")
+
 if __name__ == "__main__":
-    check_changes()
-    # test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
-    # if test_mode:
-    #     logger.info("Running in test mode")
-    #     test_monitoring()  # Use this for testing
+    main()
 
