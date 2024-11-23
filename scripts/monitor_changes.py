@@ -6,6 +6,9 @@ import os
 import re
 import logging
 from packaging import version
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -118,6 +121,38 @@ def format_changes_report(files, comparison_url, latest_release):
     report += f"\n[View full comparison on GitHub]({comparison_url})"
     return report
 
+def send_email(report, latest_tag):
+    """Send email with the changes report"""
+    logger.info("Preparing to send email...")
+    
+    smtp_server = os.environ['SMTP_SERVER']
+    sender_email = os.environ['SENDER_EMAIL']
+    receiver_email = os.environ['RECEIVER_EMAIL']
+    password = os.environ['EMAIL_PASSWORD']
+
+    # Create message
+    message = MIMEMultipart()
+    message["Subject"] = f"Watching Gutenberg (larslo) Changes: {latest_tag}"
+    message["From"] = sender_email
+    message["To"] = receiver_email
+
+    # Add body
+    message.attach(MIMEText(report, "markdown"))
+
+    try:
+        # Create secure SSL/TLS connection
+        server = smtplib.SMTP(smtp_server, 587)
+        server.starttls()
+        server.login(sender_email, password)
+        
+        # Send email
+        server.send_message(message)
+        logger.info("Email sent successfully!")
+    except Exception as e:
+        logger.error(f"Failed to send email: {e}")
+    finally:
+        server.quit()
+
 def main():
     # Get configuration from environment
     github_token = os.environ['GITHUB_TOKEN']
@@ -156,20 +191,12 @@ def main():
             latest
         )
         
-        # Save report to file for GitHub Actions
+        # Save report to file (optional now)
         with open('changes_report.md', 'w') as f:
             f.write(report)
         
-        # github prevents 
-        # Set environment variable using GitHub's recommended approach
-        # if 'GITHUB_ENV' in os.environ:  # Check if running in GitHub Actions
-        #     with open(os.environ['GITHUB_ENV'], 'a') as f:
-        #         f.write(f'CHANGES_FOUND=true\n')
-        
-        if test_mode:
-            print("\n" + "="*80 + "\n")
-            print(report)
-            print("\n" + "="*80 + "\n")
+        # Send email with the report
+        send_email(report, latest.tag_name)
     else:
         logger.info("No relevant changes found")
 

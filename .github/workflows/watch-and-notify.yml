@@ -40,35 +40,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install PyGithub packaging
 
-      - name: Run monitoring script
+      - name: Monitor Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TEST_MODE: ${{ inputs.test_mode || 'false' }}
           BASE_TAG: ${{ inputs.base_tag }}
           HEAD_TAG: ${{ inputs.head_tag }}
           TARGET_REPO: ${{ inputs.target_repo }}
-          # Optional notification settings
+          # Email configuration
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python scripts/monitor_changes.py
-
-      - name: Send Email on Changes
-        if: ${{ success() && hashFiles('changes_report.md') != '' }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: 587
-          username: ${{ secrets.SENDER_EMAIL }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "Release Changes: ${{ inputs.head_tag || 'Latest Release' }}"
-          body: file://changes_report.md
-          to: ${{ secrets.RECEIVER_EMAIL }}
-          from: Monitor Gutenberg (larslo)
-          secure: true
-          # Add these new parameters
-          ignore_cert: true
-          convert_markdown: true
-          priority: low
-          
