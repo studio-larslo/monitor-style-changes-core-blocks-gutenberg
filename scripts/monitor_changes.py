@@ -56,7 +56,7 @@ def check_file_changes(repo, base_tag, head_tag):
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
     # Define patterns to watch
-    WATCHED_FOLDER = 'packages/block-editor/src'  # Removed /src to watch all subfolders
+    WATCHED_FOLDER = 'packages/block-library/src'  # Removed /src to watch all subfolders
     
     # Updated pattern to match view.js files, block.json, and (s)css files
     WATCHED_PATTERNS = r'(view\.js|block\.json|\.(s)?css)$'

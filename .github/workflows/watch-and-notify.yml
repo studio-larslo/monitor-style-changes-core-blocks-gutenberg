@@ -65,5 +65,10 @@ jobs:
           subject: "Release Changes: ${{ inputs.head_tag || 'Latest Release' }}"
           body: file://changes_report.md
           to: ${{ secrets.RECEIVER_EMAIL }}
-          from: GitHub Release Monitor
+          from: Monitor Gutenberg (larslo)
           secure: true
+          # Add these new parameters
+          ignore_cert: true
+          convert_markdown: true
+          priority: low
+          
