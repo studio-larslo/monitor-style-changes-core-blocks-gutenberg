@@ -54,19 +54,16 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python scripts/monitor_changes.py
 
-      - name: Create Issue on Changes
+      - name: Send Email on Changes
         if: ${{ success() && hashFiles('changes_report.md') != '' }}
-        uses: actions/github-script@v7
+        uses: dawidd6/action-send-mail@v3
         with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('changes_report.md', 'utf8');
-            const title = `Release Changes: ${process.env.HEAD_TAG || 'Latest Release'}`;
-            
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: report,
-              labels: ['release-changes']
-            });
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 587
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Release Changes: ${{ inputs.head_tag || 'Latest Release' }}"
+          body: file://changes_report.md
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: GitHub Release Monitor
+          secure: true

@@ -52,24 +52,31 @@ def get_latest_releases(repo, count=2):
     return valid_releases[:count]
 
 def check_file_changes(repo, base_tag, head_tag):
-    """Compare two releases using GitHub's comparison API"""
+    """Compare two releases using GitHub's comparison API and filter for specific patterns"""
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
+    
+    # Define patterns to watch
+    WATCHED_FOLDER = '/packages/block-editor/src'
+    WATCHED_PATTERNS = r'\.(s?css|m?js)$'  # Matches .css, .scss, .js, .mjs
     
     # Get comparison directly through API
     comparison = repo.compare(base_tag, head_tag)
-    
-    # The comparison URL will be like:
-    # https://github.com/WordPress/gutenberg/compare/v19.6.4...v19.7.0
     logger.info(f"Comparison URL: {comparison.html_url}")
     
     changed_files = []
     for file in comparison.files:
-        changed_files.append({
-            'filename': file.filename,
-            'status': file.status,
-            'changes': file.changes
-        })
+        # Check if file matches our patterns
+        if (file.filename.startswith(WATCHED_FOLDER) and 
+            (re.search(WATCHED_PATTERNS, file.filename) or 
+             'view' in file.filename.lower())):
+            changed_files.append({
+                'filename': file.filename,
+                'status': file.status,
+                'changes': file.changes
+            })
+            logger.info(f"Matched file: {file.filename}")
     
+    logger.info(f"Found {len(changed_files)} matching changes")
     return changed_files
 
 def format_changes_report(files, comparison_url, latest_release):
