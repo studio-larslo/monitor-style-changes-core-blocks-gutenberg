@@ -73,7 +73,8 @@ def check_file_changes(repo, base_tag, head_tag):
                 'filename': file.filename,
                 'status': file.status,
                 'changes': file.changes,
-                'sha': file.sha
+                'blob_url': file.blob_url,  # GitHub's direct file URL
+                'contents_url': file.contents_url  # API URL for file contents
             })
             logger.info(f"Matched file: {file.filename}")
     
@@ -82,6 +83,7 @@ def check_file_changes(repo, base_tag, head_tag):
 def format_changes_report(files, comparison_url, latest_release):
     """Format the changes report"""
     base_url = f"{comparison_url}?diff=unified&w=1&expand=0"
+    repo_url = comparison_url.split('/compare/')[0]  # Gets the base repo URL
     
     report = f"# Release Comparison Report\n\n"
     report += f"New Release: {latest_release.tag_name}\n"
@@ -100,22 +102,22 @@ def format_changes_report(files, comparison_url, latest_release):
     if added:
         report += "## Added Files\n"
         for file in added:
-            diff_link = f"{base_url}#diff-{file['sha']}"
-            report += f"- [`{file['filename']}`]({diff_link})\n"
+            file_url = file['blob_url']
+            report += f"- [`{file['filename']}`]({file_url})\n"
         report += "\n"
     
     if modified:
         report += "## Modified Files\n"
         for file in modified:
-            diff_link = f"{base_url}#diff-{file['sha']}"
-            report += f"- [`{file['filename']}`]({diff_link}) ({file['changes']} changes)\n"
+            file_url = file['blob_url']
+            report += f"- [`{file['filename']}`]({file_url}) ({file['changes']} changes)\n"
         report += "\n"
     
     if removed:
         report += "## Removed Files\n"
         for file in removed:
-            diff_link = f"{base_url}#diff-{file['sha']}"
-            report += f"- [`{file['filename']}`]({diff_link})\n"
+            file_url = file['blob_url']
+            report += f"- [`{file['filename']}`]({file_url})\n"
         report += "\n"
     
     report += f"\n[View full comparison on GitHub]({base_url})"
