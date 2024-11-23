@@ -146,8 +146,10 @@ def main():
         with open('changes_report.md', 'w') as f:
             f.write(report)
         
-        # Set environment variable for GitHub Actions
-        print("::set-env name=CHANGES_FOUND::true")
+        # Set environment variable using GitHub's recommended approach
+        if 'GITHUB_ENV' in os.environ:  # Check if running in GitHub Actions
+            with open(os.environ['GITHUB_ENV'], 'a') as f:
+                f.write(f'CHANGES_FOUND=true\n')
         
         if test_mode:
             print("\n" + "="*80 + "\n")
