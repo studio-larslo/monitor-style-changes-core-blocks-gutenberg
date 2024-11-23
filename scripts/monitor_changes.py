@@ -16,11 +16,29 @@ def get_specific_releases(repo, base_tag=None, head_tag=None):
     logger.info(f"Fetching specific releases: {base_tag} → {head_tag}")
     if base_tag and head_tag:
         try:
-            base_release = repo.get_release(base_tag)
-            head_release = repo.get_release(head_tag)
-            return [head_release, base_release]
+            # Add 'v' prefix if not present
+            base_tag = f"v{base_tag}" if not base_tag.startswith('v') else base_tag
+            head_tag = f"v{head_tag}" if not head_tag.startswith('v') else head_tag
+            
+            try:
+                base_release = repo.get_release(base_tag)
+                head_release = repo.get_release(head_tag)
+                return [head_release, base_release]
+            except Exception as e:
+                # Try without 'v' prefix if first attempt fails
+                base_tag = base_tag[1:] if base_tag.startswith('v') else base_tag
+                head_tag = head_tag[1:] if head_tag.startswith('v') else head_tag
+                base_release = repo.get_release(base_tag)
+                head_release = repo.get_release(head_tag)
+                return [head_release, base_release]
+                
         except Exception as e:
             logger.error(f"Error fetching specific releases: {e}")
+            # List available releases for debugging
+            releases = list(repo.get_releases()[:5])
+            logger.info("Available recent releases:")
+            for release in releases:
+                logger.info(f"- {release.tag_name}")
             return []
     return get_latest_releases(repo)
 
