@@ -116,28 +116,29 @@ def format_changes_report(files, comparison_url, latest_release):
         for file in removed:
             report += f"- {file['filename']}\n"
     
-    # Part 2: Detailed list with links
+    # Part 2: How to use links
     report += "\n## Detailed Changes (with links)\n"
+    report += "How to use: Click on 'Files changed' and reload page\n\n"
     
     if added:
-        report += "\n### Added Files:\n"
+        report += "### Added Files:\n"
         for file in added:
             file_url = f"{comparison_url}/#diff-{file['hash']}"
-            report += f"- [`{file['filename']}`]({file_url})\n"
+            report += f"{file['filename']}:\n[View changes]({file_url})\n\n"
     
     if modified:
-        report += "\n### Modified Files:\n"
+        report += "### Modified Files:\n"
         for file in modified:
             file_url = f"{comparison_url}/#diff-{file['hash']}"
-            report += f"- [`{file['filename']}`]({file_url}) ({file['changes']} changes)\n"
+            report += f"{file['filename']}:\n[View changes]({file_url})\n\n"
     
     if removed:
-        report += "\n### Removed Files:\n"
+        report += "### Removed Files:\n"
         for file in removed:
             file_url = f"{comparison_url}/#diff-{file['hash']}"
-            report += f"- [`{file['filename']}`]({file_url})\n"
+            report += f"{file['filename']}:\n[View changes]({file_url})\n\n"
     
-    report += f"\n[View full comparison on GitHub]({comparison_url}?diff=unified&w=1&expand=0)"
+    report += f"[View full comparison on GitHub]({comparison_url}?diff=unified&w=1&expand=0)"
     
     return report
 
