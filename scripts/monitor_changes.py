@@ -52,12 +52,17 @@ def get_latest_releases(repo, count=2):
     return valid_releases[:count]
 
 def check_file_changes(repo, base_tag, head_tag):
-    """Compare two releases and return all changed files"""
+    """Compare two releases using GitHub's comparison API"""
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
+    # Get comparison directly through API
     comparison = repo.compare(base_tag, head_tag)
-    changed_files = []
     
+    # The comparison URL will be like:
+    # https://github.com/WordPress/gutenberg/compare/v19.6.4...v19.7.0
+    logger.info(f"Comparison URL: {comparison.html_url}")
+    
+    changed_files = []
     for file in comparison.files:
         changed_files.append({
             'filename': file.filename,
