@@ -118,7 +118,7 @@ def format_changes_report(files, comparison_url, latest_release):
     
     # Part 2: How to use links
     report += "\n## Detailed Changes (with links)\n"
-    report += "How to use: Click on 'Files changed' and reload page\n\n"
+    report += "How to use: Click on 'Files changed' and and wait for second (page might be huge)\n\n"
     
     if added:
         report += "### Added Files:\n"
