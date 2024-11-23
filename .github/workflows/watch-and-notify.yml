@@ -60,10 +60,10 @@ jobs:
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 587
-          username: ${{ secrets.SMTP_USER }}
-          password: ${{ secrets.SMTP_PASSWORD }}
+          username: ${{ secrets.SENDER_EMAIL }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "Release Changes: ${{ inputs.head_tag || 'Latest Release' }}"
           body: file://changes_report.md
-          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          to: ${{ secrets.RECEIVER_EMAIL }}
           from: GitHub Release Monitor
           secure: true
