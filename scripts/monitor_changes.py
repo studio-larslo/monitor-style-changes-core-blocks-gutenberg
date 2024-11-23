@@ -9,6 +9,7 @@ from packaging import version
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import hashlib
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -69,12 +70,13 @@ def check_file_changes(repo, base_tag, head_tag):
         if (file.filename.startswith(WATCHED_FOLDER) and 
             (re.search(WATCHED_PATTERNS, file.filename) or 
              'view' in file.filename.lower())):
+            # Create a SHA hash from the filename if actual SHA is not available
+            file_sha = file.sha if hasattr(file, 'sha') else hashlib.sha256(file.filename.encode()).hexdigest()
             changed_files.append({
                 'filename': file.filename,
                 'status': file.status,
                 'changes': file.changes,
-                'blob_url': file.blob_url,  # GitHub's direct file URL
-                'contents_url': file.contents_url  # API URL for file contents
+                'sha': file_sha
             })
             logger.info(f"Matched file: {file.filename}")
     
