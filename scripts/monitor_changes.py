@@ -56,8 +56,10 @@ def check_file_changes(repo, base_tag, head_tag):
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
     # Define patterns to watch
-    WATCHED_FOLDER = '/packages/block-editor/src'
-    WATCHED_PATTERNS = r'\.(s?css|m?js)$'  # Matches .css, .scss, .js, .mjs
+    WATCHED_FOLDER = 'packages/block-editor/src'  # Removed /src to watch all subfolders
+    
+    # Updated pattern to match view.js files, block.json, and (s)css files
+    WATCHED_PATTERNS = r'(view\.js|block\.json|\.(s)?css)$'
     
     # Get comparison directly through API
     comparison = repo.compare(base_tag, head_tag)
