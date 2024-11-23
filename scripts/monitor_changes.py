@@ -70,13 +70,13 @@ def check_file_changes(repo, base_tag, head_tag):
         if (file.filename.startswith(WATCHED_FOLDER) and 
             (re.search(WATCHED_PATTERNS, file.filename) or 
              'view' in file.filename.lower())):
-            # Create a SHA hash from the filename if actual SHA is not available
-            file_sha = file.sha if hasattr(file, 'sha') else hashlib.sha256(file.filename.encode()).hexdigest()
+            # Create a deterministic hash from the filename
+            file_hash = hashlib.sha256(file.filename.encode()).hexdigest()
             changed_files.append({
                 'filename': file.filename,
                 'status': file.status,
                 'changes': file.changes,
-                'sha': file_sha
+                'hash': file_hash
             })
             logger.info(f"Matched file: {file.filename}")
     
@@ -84,11 +84,6 @@ def check_file_changes(repo, base_tag, head_tag):
 
 def format_changes_report(files, comparison_url, latest_release):
     """Format the changes report"""
-    # Extract repo base and tags
-    repo_base = comparison_url.split('/compare/')[0]
-    base_tag = comparison_url.split('compare/')[1].split('...')[0]
-    head_tag = comparison_url.split('...')[1]
-    
     report = f"# Release Comparison Report\n\n"
     report += f"New Release: {latest_release.tag_name}\n"
     report += f"Released on: {latest_release.created_at}\n\n"
@@ -103,26 +98,44 @@ def format_changes_report(files, comparison_url, latest_release):
     report += f"- Modified: {len(modified)} files\n"
     report += f"- Removed: {len(removed)} files\n\n"
     
+    # Part 1: Simple list of filenames
+    report += "## Changed Files (Overview)\n"
+    
     if added:
-        report += "## Added Files\n"
+        report += "\n### Added:\n"
         for file in added:
-            file_url = f"{repo_base}/blob/{head_tag}/{file['filename']}?diff={base_tag}"
-            report += f"- [`{file['filename']}`]({file_url})\n"
-        report += "\n"
+            report += f"- {file['filename']}\n"
     
     if modified:
-        report += "## Modified Files\n"
+        report += "\n### Modified:\n"
         for file in modified:
-            file_url = f"{repo_base}/blob/{head_tag}/{file['filename']}?diff={base_tag}"
-            report += f"- [`{file['filename']}`]({file_url}) ({file['changes']} changes)\n"
-        report += "\n"
+            report += f"- {file['filename']} ({file['changes']} changes)\n"
     
     if removed:
-        report += "## Removed Files\n"
+        report += "\n### Removed:\n"
         for file in removed:
-            file_url = f"{repo_base}/blob/{base_tag}/{file['filename']}?diff={head_tag}"
+            report += f"- {file['filename']}\n"
+    
+    # Part 2: Detailed list with links
+    report += "\n## Detailed Changes (with links)\n"
+    
+    if added:
+        report += "\n### Added Files:\n"
+        for file in added:
+            file_url = f"{comparison_url}/#diff-{file['hash']}"
             report += f"- [`{file['filename']}`]({file_url})\n"
-        report += "\n"
+    
+    if modified:
+        report += "\n### Modified Files:\n"
+        for file in modified:
+            file_url = f"{comparison_url}/#diff-{file['hash']}"
+            report += f"- [`{file['filename']}`]({file_url}) ({file['changes']} changes)\n"
+    
+    if removed:
+        report += "\n### Removed Files:\n"
+        for file in removed:
+            file_url = f"{comparison_url}/#diff-{file['hash']}"
+            report += f"- [`{file['filename']}`]({file_url})\n"
     
     report += f"\n[View full comparison on GitHub]({comparison_url}?diff=unified&w=1&expand=0)"
     
