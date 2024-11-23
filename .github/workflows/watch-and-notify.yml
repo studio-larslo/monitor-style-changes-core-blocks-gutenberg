@@ -55,7 +55,7 @@ jobs:
         run: python scripts/monitor_changes.py
 
       - name: Create Issue on Changes
-        if: ${{ success() && env.CHANGES_FOUND == 'true' }}
+        if: ${{ success() && hashFiles('changes_report.md') != '' }}
         uses: actions/github-script@v7
         with:
           script: |
