@@ -58,34 +58,31 @@ def check_file_changes(repo, base_tag, head_tag):
     """Compare two releases using GitHub's comparison API and filter for specific patterns"""
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
-    # Define patterns to watch
-    WATCHED_FOLDER = 'packages/block-library/src'  # Removed /src to watch all subfolders
+    WATCHED_FOLDER = 'packages/block-library/src'
+    WATCHED_PATTERNS = r'(view\.js|block\.json|style\.(s)?css)$'
     
-    # Updated pattern to match view.js files, block.json, and (s)css files
-    WATCHED_PATTERNS = r'(view\.js|block\.json|\.(s)?css)$'
-    
-    # Get comparison directly through API
     comparison = repo.compare(base_tag, head_tag)
     logger.info(f"Comparison URL: {comparison.html_url}")
     
     changed_files = []
     for file in comparison.files:
-        # Check if file matches our patterns
         if (file.filename.startswith(WATCHED_FOLDER) and 
             (re.search(WATCHED_PATTERNS, file.filename) or 
              'view' in file.filename.lower())):
             changed_files.append({
                 'filename': file.filename,
                 'status': file.status,
-                'changes': file.changes
+                'changes': file.changes,
+                'sha': file.sha
             })
             logger.info(f"Matched file: {file.filename}")
     
-    logger.info(f"Found {len(changed_files)} matching changes")
-    return changed_files
+    return changed_files, comparison.html_url
 
 def format_changes_report(files, comparison_url, latest_release):
     """Format the changes report"""
+    base_url = f"{comparison_url}?diff=unified&w=1&expand=0"
+    
     report = f"# Release Comparison Report\n\n"
     report += f"New Release: {latest_release.tag_name}\n"
     report += f"Released on: {latest_release.created_at}\n\n"
@@ -103,22 +100,26 @@ def format_changes_report(files, comparison_url, latest_release):
     if added:
         report += "## Added Files\n"
         for file in added:
-            report += f"- `{file['filename']}`\n"
+            diff_link = f"{base_url}#diff-{file['sha']}"
+            report += f"- [`{file['filename']}`]({diff_link})\n"
         report += "\n"
     
     if modified:
         report += "## Modified Files\n"
         for file in modified:
-            report += f"- `{file['filename']}` ({file['changes']} changes)\n"
+            diff_link = f"{base_url}#diff-{file['sha']}"
+            report += f"- [`{file['filename']}`]({diff_link}) ({file['changes']} changes)\n"
         report += "\n"
     
     if removed:
         report += "## Removed Files\n"
         for file in removed:
-            report += f"- `{file['filename']}`\n"
+            diff_link = f"{base_url}#diff-{file['sha']}"
+            report += f"- [`{file['filename']}`]({diff_link})\n"
         report += "\n"
     
-    report += f"\n[View full comparison on GitHub]({comparison_url})"
+    report += f"\n[View full comparison on GitHub]({base_url})"
+    
     return report
 
 def send_email(report, latest_tag):
@@ -181,13 +182,13 @@ def main():
     previous = releases[1]
     
     # Check for relevant changes
-    matching_files = check_file_changes(repo, previous.tag_name, latest.tag_name)
+    matching_files, comparison_url = check_file_changes(repo, previous.tag_name, latest.tag_name)
     
     if matching_files:
         logger.info(f"Found {len(matching_files)} relevant changes")
         report = format_changes_report(
             matching_files,
-            f"https://github.com/{target_repo}/compare/{previous.tag_name}...{latest.tag_name}",
+            comparison_url,
             latest
         )
         
