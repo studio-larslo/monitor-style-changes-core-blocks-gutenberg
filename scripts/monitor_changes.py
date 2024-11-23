@@ -83,7 +83,12 @@ def check_file_changes(repo, base_tag, head_tag):
 def format_changes_report(files, comparison_url, latest_release):
     """Format the changes report"""
     base_url = f"{comparison_url}?diff=unified&w=1&expand=0"
-    repo_url = comparison_url.split('/compare/')[0]  # Gets the base repo URL
+    
+    # Extract base and head tags from comparison_url
+    # Example: https://github.com/WordPress/gutenberg/compare/v19.6.4...v19.7.0
+    base_tag = comparison_url.split('compare/')[1].split('...')[0]
+    head_tag = comparison_url.split('...')[1]
+    repo_base = comparison_url.split('/compare/')[0]
     
     report = f"# Release Comparison Report\n\n"
     report += f"New Release: {latest_release.tag_name}\n"
@@ -102,21 +107,21 @@ def format_changes_report(files, comparison_url, latest_release):
     if added:
         report += "## Added Files\n"
         for file in added:
-            file_url = file['blob_url']
+            file_url = f"{repo_base}/compare/{base_tag}...{head_tag}#diff-{file['sha']}"
             report += f"- [`{file['filename']}`]({file_url})\n"
         report += "\n"
     
     if modified:
         report += "## Modified Files\n"
         for file in modified:
-            file_url = file['blob_url']
+            file_url = f"{repo_base}/compare/{base_tag}...{head_tag}#diff-{file['sha']}"
             report += f"- [`{file['filename']}`]({file_url}) ({file['changes']} changes)\n"
         report += "\n"
     
     if removed:
         report += "## Removed Files\n"
         for file in removed:
-            file_url = file['blob_url']
+            file_url = f"{repo_base}/compare/{base_tag}...{head_tag}#diff-{file['sha']}"
             report += f"- [`{file['filename']}`]({file_url})\n"
         report += "\n"
     
