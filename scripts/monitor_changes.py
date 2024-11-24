@@ -176,7 +176,7 @@ def send_email(report, latest_tag):
 
 def main():
     # Get configuration from environment
-    github_token = os.environ['MONITOR_TOKEN']
+    github_token = os.environ.get('MONITOR_TOKEN')
     target_repo = os.environ.get('TARGET_REPO', 'WordPress/gutenberg')
     test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
     base_tag = os.environ.get('BASE_TAG')
