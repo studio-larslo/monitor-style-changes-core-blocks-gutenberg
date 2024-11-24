@@ -176,7 +176,7 @@ def send_email(report, latest_tag):
 
 def main():
     # Get configuration from environment
-    github_token = os.environ['GITHUB_TOKEN']
+    github_token = os.environ['MONITOR_TOKEN']
     target_repo = os.environ.get('TARGET_REPO', 'WordPress/gutenberg')
     test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
     base_tag = os.environ.get('BASE_TAG')
@@ -185,8 +185,20 @@ def main():
     logger.info(f"Starting release monitoring for: {target_repo}")
     logger.info(f"Test mode: {test_mode}")
     
-    g = Github(github_token)
-    repo = g.get_repo(target_repo)
+    try:
+        g = Github(github_token)
+        # Test the authentication
+        user = g.get_user()
+        logger.info(f"Authenticated as: {user.login}")
+        
+        repo = g.get_repo(target_repo)
+        logger.info(f"Repository accessed: {repo.full_name}")
+        
+    except Exception as e:
+        logger.error(f"GitHub Authentication Error: {e}")
+        logger.error("Please check your MONITOR_TOKEN permissions")
+        logger.error("Token needs: repo access (public_repo for public repositories)")
+        return
     
     # Get releases based on mode
     if test_mode:

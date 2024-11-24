@@ -8,7 +8,7 @@ on:
       test_mode:
         description: 'Run in test mode'
         type: boolean
-        default: true
+        default: false
       base_tag:
         description: 'Base release tag (older)'
         required: false
