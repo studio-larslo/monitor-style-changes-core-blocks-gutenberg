@@ -42,7 +42,7 @@ jobs:
 
       - name: Monitor Changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MONITOR_TOKEN: ${{ secrets.MONITOR_TOKEN }}
           TEST_MODE: ${{ inputs.test_mode || 'false' }}
           BASE_TAG: ${{ inputs.base_tag }}
           HEAD_TAG: ${{ inputs.head_tag }}
