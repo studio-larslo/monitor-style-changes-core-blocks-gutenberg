@@ -256,7 +256,7 @@ def main():
             latest
         )
         update_version_history_as_release(repo, latest.tag_name, previous.tag_name, True)
-        send_email(report, latest.tag_name)
+        send_email(report, latest.tag_name, previous.tag_name)
     else:
         logger.info("No relevant changes found")
         update_version_history_as_release(repo, latest.tag_name, previous.tag_name, False)
