@@ -198,6 +198,8 @@ def main():
         logger.error(f"GitHub Authentication Error: {e}")
         logger.error("Please check your MONITOR_TOKEN permissions")
         logger.error("Token needs: repo access (public_repo for public repositories)")
+        # send email to myself
+        send_email("GitHub Authentication Error: " + str(e), "GitHub Authentication Error")
         return
     
     # Get releases based on mode
