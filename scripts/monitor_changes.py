@@ -142,7 +142,7 @@ def format_changes_report(files, comparison_url, latest_release):
     
     return report
 
-def send_email(report, latest_tag):
+def send_email(report, latest_tag, previous_tag):
     """Send email with the changes report"""
     logger.info("Preparing to send email...")
     
@@ -153,7 +153,7 @@ def send_email(report, latest_tag):
 
     # Create message
     message = MIMEMultipart()
-    message["Subject"] = f"Watching Gutenberg (larslo) Changes: {latest_tag}"
+    message["Subject"] = f"Watching Gutenberg Changes: {previous_tag} → {latest_tag}"
     message["From"] = sender_email
     message["To"] = receiver_email
 
@@ -173,6 +173,25 @@ def send_email(report, latest_tag):
         logger.error(f"Failed to send email: {e}")
     finally:
         server.quit()
+
+
+def update_version_history_as_release(repo, latest_tag, previous_tag, has_changes):
+    """Create a release note to track the comparison"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    title = f"Comparison {previous_tag} → {latest_tag}"
+    body = f"Compared on: {timestamp}\nChanges found: {'Yes' if has_changes else 'No'}"
+    repo.create_git_release(f"comparison-{latest_tag}", title, body, draft=False)
+
+
+def has_comparison_release(repo, latest_tag, previous_tag):
+    """Check if comparison already exists"""
+    comparison_tag = f"comparison-{latest_tag}"
+    try:
+        repo.get_release(comparison_tag)
+        return True
+    except:
+        return False
 
 def main():
     # Get configuration from environment
@@ -215,6 +234,11 @@ def main():
     latest = releases[0]
     previous = releases[1]
     
+    # Add early exit if comparison exists
+    if has_comparison_release(repo, latest.tag_name, previous.tag_name):
+        logger.info(f"Comparison between {previous.tag_name} and {latest.tag_name} already exists. Exiting.")
+        return
+    
     # Check for relevant changes
     matching_files, comparison_url = check_file_changes(repo, previous.tag_name, latest.tag_name)
     
@@ -225,16 +249,11 @@ def main():
             comparison_url,
             latest
         )
-        
-        # Save report to file (optional now)
-        with open('changes_report.md', 'w') as f:
-            f.write(report)
-        
-        # Send email with the report
+        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, True)
         send_email(report, latest.tag_name)
     else:
         logger.info("No relevant changes found")
-
+        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, False)
 if __name__ == "__main__":
     main()
 
