@@ -60,8 +60,10 @@ def check_file_changes(repo, base_tag, head_tag):
     logger.info(f"Comparing releases: {base_tag} → {head_tag}")
     
     WATCHED_FOLDER = 'packages/block-library/src'
-    WATCHED_PATTERNS = r'(view\.js|block\.json|style\.(s)?css)$'
+    WATCHED_PATTERNS = r'(view\.js|block\.json|style\.(s)?css|save\.js|index\.php)'
     
+    comparison = repo.compare(base_tag, head_tag)
+    logger.info(f"Comparison URL: {comparison.html_url}")    
     comparison = repo.compare(base_tag, head_tag)
     logger.info(f"Comparison URL: {comparison.html_url}")
     
