@@ -175,19 +175,25 @@ def send_email(report, latest_tag, previous_tag):
         server.quit()
 
 
-def update_version_history_as_release(repo, latest_tag, previous_tag, has_changes):
+def update_version_history_as_release(repo, latest_tag, previous_tag, has_changes, report):
     """Create a release note to track the comparison"""
     from datetime import datetime
     
-    # Get our monitoring repo instead of target repo
     g = Github(os.environ.get('MONITOR_TOKEN'))
     monitor_repo = g.get_repo(os.environ.get('GITHUB_REPOSITORY'))
     
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     title = f"Comparison {previous_tag} → {latest_tag}"
-    body = f"Compared on: {timestamp}\nChanges found: {'Yes' if has_changes else 'No'}"
     
-    monitor_repo.create_git_release(f"comparison-{latest_tag}", title, body, draft=False)
+    # Use the full report as release description
+    monitor_repo.create_git_release(
+        tag=f"comparison-{latest_tag}-{timestamp}",
+        name=title,
+        message=report,
+        draft=False,
+        prerelease=False,
+        generate_release_notes=False
+    )
 
 
 def has_comparison_release(repo, latest_tag, previous_tag):
@@ -255,11 +261,11 @@ def main():
             comparison_url,
             latest
         )
-        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, True)
+        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, True, report)
         send_email(report, latest.tag_name, previous.tag_name)
     else:
         logger.info("No relevant changes found")
-        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, False)
+        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, False, "no changes")
 if __name__ == "__main__":
     main()
 
