@@ -2,8 +2,8 @@ name: Watch Release Changes
 
 on:
   schedule:
-    # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
-    - cron: '*/10 * * * *'  # Runs every 5 minutes
+    - cron: '0 4 * * *'  # Runs at 04:00 UTC every day
+    # - cron: '*/10 * * * *'  # Runs every 10 minutes
   workflow_dispatch:
     inputs:
       test_mode:
