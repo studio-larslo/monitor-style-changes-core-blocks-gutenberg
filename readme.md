@@ -20,13 +20,15 @@ This tool helps you stay informed about frontend-relevant changes, allowing you 
 
 ## What it Monitors
 
+The focus is on files that directly impact how blocks render on your site's frontend.
+
 Specifically tracks changes in these critical frontend files:
 - `*.scss` files - Style changes that affect block appearance
 - `view.js` files - Frontend JavaScript that controls block behavior
 - `block.json` - Block configuration that can affect rendering
-- Other frontend-related files in `packages/block-library/src/`
+- `save.js` files - Block save/render logic for editor and frontend
+- `index.php` files - Server-Side rendering of blocks
 
-The focus is on files that directly impact how blocks render on your site's frontend.
 
 ## What it does
 

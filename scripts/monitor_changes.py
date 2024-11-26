@@ -210,7 +210,8 @@ def has_comparison_release(repo, latest_tag, previous_tag):
 def main():
     # Get configuration from environment
     github_token = os.environ.get('MONITOR_TOKEN')
-    target_repo = os.environ.get('TARGET_REPO', 'WordPress/gutenberg')
+    # target_repo = os.environ.get('TARGET_REPO', 'WordPress/gutenberg')
+    target_repo = 'WordPress/gutenberg'
     test_mode = os.environ.get('TEST_MODE', 'false').lower() == 'true'
     base_tag = os.environ.get('BASE_TAG')
     head_tag = os.environ.get('HEAD_TAG')
@@ -221,6 +222,7 @@ def main():
     try:
         g = Github(github_token)
         # Test the authentication
+        logger.info(f"Attempting to access repository: {target_repo}")
         user = g.get_user()
         logger.info(f"Authenticated as: {user.login}")
         

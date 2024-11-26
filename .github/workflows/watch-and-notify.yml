@@ -2,7 +2,8 @@ name: Watch Release Changes
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+    # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+    - cron: '*/5 * * * *'  # Runs every 5 minutes
   workflow_dispatch:
     inputs:
       test_mode:
@@ -19,7 +20,7 @@ on:
         type: string
       target_repo:
         description: 'Target repository (owner/repo)'
-        required: false
+        required: true
         default: 'WordPress/gutenberg'
         type: string
 
