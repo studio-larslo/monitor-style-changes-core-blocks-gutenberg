@@ -208,6 +208,16 @@ def has_comparison_release(repo, latest_tag):
     except:
         return False
 
+def has_comparison_release(repo, latest_tag, previous_tag):
+    """Check if a comparison release already exists based on tag prefix."""
+    releases = repo.get_releases()
+    comparison_prefix = f"comparison-{latest_tag}"
+    for release in releases:
+        if release.tag_name.startswith(comparison_prefix):
+            return True
+    return False
+   
+
 def main():
     # Get configuration from environment
     github_token = os.environ.get('MONITOR_TOKEN')
