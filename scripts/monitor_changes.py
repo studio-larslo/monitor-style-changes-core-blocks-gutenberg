@@ -198,9 +198,10 @@ def update_version_history_as_release(repo, latest_tag, previous_tag, has_change
     )
 
 
-def has_comparison_release(repo, latest_tag, previous_tag):
+def has_comparison_release(repo, latest_tag):
     """Check if comparison already exists"""
     comparison_tag = f"comparison-{latest_tag}"
+    logger.info(f"Checking for comparison tag: {comparison_tag} in repo: {repo.full_name}")
     try:
         repo.get_release(comparison_tag)
         return True
@@ -251,7 +252,7 @@ def main():
     self_repo = g.get_repo('studio-larslo/monitor-style-changes-core-blocks-gutenberg')
     
     # Check if comparison already exists first
-    if has_comparison_release(self_repo, latest.tag_name, previous.tag_name):
+    if has_comparison_release(self_repo, latest.tag_name):
         logger.info(f"Comparison between {previous.tag_name} and {latest.tag_name} already exists. Exiting.")
         return
     
