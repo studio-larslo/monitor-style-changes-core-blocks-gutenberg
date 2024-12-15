@@ -208,7 +208,7 @@ def has_comparison_release(repo, latest_tag):
     except:
         return False
 
-def has_comparison_release(repo, latest_tag, previous_tag):
+def has_comparison_release(repo, latest_tag):
     """Check if a comparison release already exists based on tag prefix."""
     releases = repo.get_releases()
     comparison_prefix = f"comparison-{latest_tag}"
