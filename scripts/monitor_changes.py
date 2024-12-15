@@ -250,26 +250,22 @@ def main():
     latest = releases[0]
     previous = releases[1]
     
-    # Add early exit if comparison exists
+    # Check if comparison already exists first
     if has_comparison_release(repo, latest.tag_name, previous.tag_name):
         logger.info(f"Comparison between {previous.tag_name} and {latest.tag_name} already exists. Exiting.")
         return
     
-    # Check for relevant changes
+    # Check for changes before creating release
     matching_files, comparison_url = check_file_changes(repo, previous.tag_name, latest.tag_name)
     
     if matching_files:
+        # Only create release and send email if there are actual changes
         logger.info(f"Found {len(matching_files)} relevant changes")
-        report = format_changes_report(
-            matching_files,
-            comparison_url,
-            latest
-        )
+        report = format_changes_report(matching_files, comparison_url, latest)
         update_version_history_as_release(repo, latest.tag_name, previous.tag_name, True, report)
         send_email(report, latest.tag_name, previous.tag_name)
     else:
-        logger.info("No relevant changes found")
-        update_version_history_as_release(repo, latest.tag_name, previous.tag_name, False, "no changes")
+        logger.info("No relevant changes found - skipping release creation")
 if __name__ == "__main__":
     main()
 
