@@ -225,7 +225,6 @@ def main():
         logger.info(f"Attempting to access repository: {target_repo}")
         user = g.get_user()
         logger.info(f"Authenticated as: {user.login}")
-        
         repo = g.get_repo(target_repo)
         logger.info(f"Repository accessed: {repo.full_name}")
         
@@ -249,9 +248,10 @@ def main():
     
     latest = releases[0]
     previous = releases[1]
+    self_repo = g.get_repo('studio-larslo/monitor-style-changes-core-blocks-gutenberg')
     
     # Check if comparison already exists first
-    if has_comparison_release(repo, latest.tag_name, previous.tag_name):
+    if has_comparison_release(self_repo, latest.tag_name, previous.tag_name):
         logger.info(f"Comparison between {previous.tag_name} and {latest.tag_name} already exists. Exiting.")
         return
     
